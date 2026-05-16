@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO: title + description (مشكلة 70، 71) -->
+    <title>نخبة — متجر الموضة الفاخرة</title>
+    <meta name="description" content="نخبة — اكتشف أرقى تشكيلات الموضة من أشهر الماركات العالمية. تسوّق الملابس والأحذية والإكسسوارات الفاخرة بأفضل الأسعار وتوصيل مجاني." />
+
+    <!-- Open Graph — مشاركة واتساب وتويتر (مشكلة 72) -->
+    <meta property="og:title"       content="نخبة — متجر الموضة الفاخرة" />
+    <meta property="og:description" content="اكتشف أرقى تشكيلات الموضة من أشهر الماركات العالمية" />
+    <meta property="og:image"       content="/opengraph.jpg" />
+    <meta property="og:type"        content="website" />
+    <meta property="og:locale"      content="ar_SA" />
+    <meta name="twitter:card"       content="summary_large_image" />
+
+    <!-- مشكلة 133: theme-color — لون شريط المتصفح على Android يتطابق مع هوية العلامة -->
+    <meta name="theme-color" content="#8B6310" />
+
+    <!-- مشكلة 134: favicon مرتبط صراحةً — كان موجوداً في public/ دون ربط في HTML -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- مشكلة 135: manifest.json للـ PWA — يُتيح "إضافة للشاشة الرئيسية" -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Fonts: Tajawal فقط — حُذف Scheherazade New (130KB+) وحُذف weight 300 (مشاكل 60، 61) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

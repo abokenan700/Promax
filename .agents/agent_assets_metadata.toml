@@ -1,0 +1,38 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "N4rAWOMQTdMXdpo63iXIB"
+uri = "file://PHASE_0_ARCHITECTURE_AUDIT.md"
+type = "text"
+title = "Phase 0 — Architecture Audit Report"
+
+[[outputs]]
+id = "CFxUt2VWUiW9pDKyjDL0K"
+uri = "file://DESIGN_DNA_REPORT.md"
+type = "text"
+title = "Design DNA Report — Visual Language Source of Truth"
+
+[[outputs]]
+id = "9qCFVPAydJxD4NVpZTFEu"
+uri = "file://VISUAL_QA_REPORT.md"
+type = "text"
+title = "Phase 1 — Pixel-Perfect Visual QA Report (83 Issues)"
+
+[[outputs]]
+id = "u--gP8b7R1TylxVBCRXdO"
+uri = "file://ARCHITECTURE_AUDIT_REPORT.md"
+type = "text"
+title = "Phase 2 — Architecture & Code Quality Audit (62 Issues)"
+
+[[outputs]]
+id = "gnSOj9sKEPwrHqI81aLVr"
+uri = "file://PERFORMANCE_A11Y_AUDIT_REPORT.md"
+type = "text"
+title = "Phase 3 — Performance & Accessibility Deep Audit (58 Issues)"
+
+[[outputs]]
+id = "di8sIqktXXncFLgp1TRDR"
+uri = "file://خطة_تطوير.md"
+type = "text"
+title = "خطة تطوير — 155 مشكلة مرقمة تسلسلياً"

@@ -1,0 +1,568 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  # مشكلة 150: versioning — /api/v1 يُمكّن تغييرات جوهرية مستقبلاً دون كسر العملاء
+  - url: /api/v1
+    description: Base API path (v1)
+tags:
+  - name: health
+    description: Health operations
+  - name: products
+    description: Product operations
+  - name: brands
+    description: Brand operations
+  - name: auth
+    description: Authentication operations          # T06
+  - name: cart
+    description: Shopping cart operations           # T07
+  - name: wishlist
+    description: Wishlist operations                # T08
+  - name: categories
+    description: Category operations                # T08
+
+paths:
+  # ── Health ──────────────────────────────────────────────────────
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ── Products ─────────────────────────────────────────────────────
+  /products:
+    get:
+      operationId: getProducts
+      tags: [products]
+      summary: List all products
+      description: Returns all products. Supports optional query string search (?q=).
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Text search across product name and brand
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /products/{id}:
+    get:
+      operationId: getProductById
+      tags: [products]
+      summary: Get a single product by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  # ── Brands ───────────────────────────────────────────────────────
+  /brands:
+    get:
+      operationId: getBrands
+      tags: [brands]
+      summary: List all brands
+      description: Returns all brands from the database
+      responses:
+        "200":
+          description: List of brands
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Brand"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  # ── Auth (T06) ────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "400":
+          description: Validation error (e.g. email already taken)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  # ── Cart (T07) ────────────────────────────────────────────────────
+  /cart:
+    get:
+      operationId: getCart
+      tags: [cart]
+      summary: Get cart for current device/user
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "200":
+          description: Cart contents
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartSummary"
+
+    post:
+      operationId: addToCart
+      tags: [cart]
+      summary: Add item to cart
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddToCartRequest"
+      responses:
+        "200":
+          description: Item added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartSummary"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+    delete:
+      operationId: clearCart
+      tags: [cart]
+      summary: Clear the entire cart
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "204":
+          description: Cart cleared
+
+  /cart/product/{productId}:
+    delete:
+      operationId: removeFromCart
+      tags: [cart]
+      summary: Remove a specific product from cart
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Item removed
+        "404":
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  # ── Wishlist (T08) ────────────────────────────────────────────────
+  /wishlist:
+    get:
+      operationId: getWishlist
+      tags: [wishlist]
+      summary: Get wishlist for current device/user
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "200":
+          description: Wishlist items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+
+  /wishlist/{productId}:
+    post:
+      operationId: addToWishlist
+      tags: [wishlist]
+      summary: Add product to wishlist
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product added to wishlist
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+    delete:
+      operationId: removeFromWishlist
+      tags: [wishlist]
+      summary: Remove product from wishlist
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Product removed from wishlist
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  # ── Categories (T08) ──────────────────────────────────────────────
+  /categories:
+    get:
+      operationId: getCategories
+      tags: [categories]
+      summary: List all product categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    DeviceId:
+      name: x-device-id
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Anonymous device identifier for guest cart/wishlist
+
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        brand:
+          type: string
+        price:
+          type: number
+        original_price:
+          type: number
+        discount:
+          type: integer
+        image:
+          type: string
+        is_new:
+          type: boolean
+          nullable: true
+        rating:
+          type: number
+        sales:
+          type: integer
+        colors:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - name
+        - brand
+        - price
+        - original_price
+        - discount
+        - image
+        - rating
+        - sales
+        - colors
+
+    Brand:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        icon:
+          type: string
+          nullable: true
+      required:
+        - id
+        - label
+        - icon
+
+    Category:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        image_url:
+          type: string
+          nullable: true
+      required:
+        - slug
+        - name
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+      required:
+        - id
+        - name
+        - email
+
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+      required:
+        - name
+        - email
+        - password
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AddToCartRequest:
+      type: object
+      properties:
+        product_id:
+          type: integer
+        qty:
+          type: integer
+          minimum: 1
+        color:
+          type: string
+      required:
+        - product_id
+        - qty
+
+    CartItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        product_id:
+          type: integer
+        name:
+          type: string
+        brand:
+          type: string
+        price:
+          type: number
+        image:
+          type: string
+        qty:
+          type: integer
+        color:
+          type: string
+      required:
+        - id
+        - product_id
+        - name
+        - brand
+        - price
+        - image
+        - qty
+        - color
+
+    CartSummary:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+        count:
+          type: integer
+        total:
+          type: number
+      required:
+        - items
+        - count
+        - total
+
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
